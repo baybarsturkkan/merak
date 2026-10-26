@@ -1,0 +1,7 @@
+node_modules/
+dist/
+dev-dist/
+*.log
+.DS_Store
+# Kişisel veri ayrı, özel bir depoda (merak-veri) tutulur
+veri/
