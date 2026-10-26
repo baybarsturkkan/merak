@@ -71,7 +71,7 @@ export function Bugun() {
           disabled={due + newAvailable === 0}
           onClick={() => go('calis')}
         >
-          {due + newAvailable > 0 ? 'Başla' : 'Bugünlük bitti'}
+          {due + newAvailable > 0 ? 'Çalışmaya başla' : 'Bugünlük bitti'}
         </button>
       </div>
 
@@ -113,7 +113,7 @@ export function Bugun() {
             <p className="sub">Genel kültürü en çok artıran, değiştirebileceğin etken: ne kadar okuduğun.</p>
           </div>
           <button type="button" className="btn btn-sm" onClick={() => go('okuma')}>
-            <IconBook width={16} height={16} /> Ekle
+            <IconBook width={16} height={16} /> Okuma ekle
           </button>
         </div>
         {pending.length > 0 ? (

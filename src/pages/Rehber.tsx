@@ -224,10 +224,10 @@ export function Rehber() {
             ))}
           </select>
           <button type="button" className="toggle" aria-pressed={onlyTr} onClick={() => setOnlyTr((v) => !v)}>
-            Türkçe
+            Yalnızca Türkçe
           </button>
           <button type="button" className="toggle" aria-pressed={onlyFree} onClick={() => setOnlyFree((v) => !v)}>
-            Ücretsiz
+            Yalnızca ücretsiz
           </button>
         </div>
 

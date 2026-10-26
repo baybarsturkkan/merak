@@ -14,7 +14,7 @@ const FILTERS: Array<{ v: Filter; label: string }> = [
   { v: 'ogreniliyor', label: 'Öğreniliyor' },
   { v: 'tekrar', label: 'Tekrarda' },
   { v: 'olgun', label: 'Olgun' },
-  { v: 'askida', label: 'Askıda' },
+  { v: 'askida', label: 'Sorulmayanlar' },
   { v: 'hatali', label: 'Hatalı işaretli' },
 ];
 
@@ -121,7 +121,7 @@ function CardRow({ s, now, open, onToggle }: { s: CardState; now: Date; open: bo
             <span className={`chip${phase === 'olgun' ? ' chip-good' : phase === 'yeni' ? ' chip-accent' : ''}`}>
               {PHASE_LABELS[phase]}
             </span>
-            {s.suspended && <span className="chip">Askıda</span>}
+            {s.suspended && <span className="chip">Sorulmuyor</span>}
             {s.flag && <span className="chip chip-warn">Hatalı işaretli</span>}
             {c.image && <span className="chip">{c.image.show === 'soru' ? 'Görselden' : 'Görsel'}</span>}
             {!s.isNew && !s.suspended && <span className="muted small">{dueLabel(s.fsrs.due, now)}</span>}
@@ -202,7 +202,7 @@ function CardRow({ s, now, open, onToggle }: { s: CardState; now: Date; open: bo
               </label>
               <div className="row">
                 <button type="submit" className="btn btn-sm">
-                  Bildir
+                  Hatayı bildir
                 </button>
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFlagging(false)}>
                   Vazgeç
@@ -224,8 +224,9 @@ function CardRow({ s, now, open, onToggle }: { s: CardState; now: Date; open: bo
                 type="button"
                 className="btn btn-ghost btn-sm"
                 onClick={() => record({ type: s.suspended ? 'geri-al' : 'askiya-al', cardId: c.id })}
+                title={s.suspended ? 'Kart yeniden çalışmaya katılır.' : 'Kart çalışmadan çıkar; istediğinde geri alabilirsin.'}
               >
-                {s.suspended ? 'Askıdan al' : 'Askıya al'}
+                {s.suspended ? 'Yeniden sor' : 'Bir daha sorma'}
               </button>
             </div>
           )}

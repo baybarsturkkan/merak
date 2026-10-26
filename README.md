@@ -53,7 +53,7 @@ Bu klasörde Claude Code’u aç:
 | `/kart-ekle <konu>` | Bir konuda 5–10 kart yazar. |
 | `/hangisi [çift]` | Karıştırdığın kavramlar için seçenekli kartlar yazar. |
 | `/oneri` | Merakına göre 3 okuma ve kart konusu önerir. |
-| `/kart-duzelt` | Uygulamada “Hatalı mı?” ile işaretlediğin kartları düzeltir. |
+| `/kart-duzelt` | Uygulamada “Hata bildir” ile işaretlediğin kartları düzeltir. |
 | `/rehber [alan]` | Rehber bölümü için kaynak araştırır, doğrular ve ekler; boş bırakırsan merakına göre genişletir. |
 
 ## Geliştirme

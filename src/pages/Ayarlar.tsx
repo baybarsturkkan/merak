@@ -252,7 +252,7 @@ function SyncPanel() {
             await sync();
           }}
         >
-          Önbelleği yenile
+          Önbelleği silip yeniden indir
         </button>
       </div>
     </section>

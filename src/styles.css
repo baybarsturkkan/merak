@@ -1098,15 +1098,44 @@ details.why p {
   text-align: center;
 }
 
+/* Butonun köşesindeki klavye kısayolu */
+.choice,
+.grade {
+  position: relative;
+}
+
+.choice .key,
+.grade .key {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  min-width: 18px;
+  padding: 0 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+}
+
 @media (hover: none) {
-  .kbd-hint {
+  .kbd-hint,
+  .choice .key,
+  .grade .key {
     display: none;
   }
 }
 
 @media (max-width: 420px) {
+  /* Dar ekranda 2×2: etiket ve süre tek satıra sığsın */
+  .grades:not(.one) {
+    grid-template-columns: repeat(2, 1fr);
+  }
   .grade {
-    font-size: 0.82rem;
+    min-height: 52px;
   }
   .study-card .question {
     font-size: 1.35rem;

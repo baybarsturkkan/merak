@@ -32,17 +32,17 @@ interface Outcome {
   ms: number;
 }
 
-const CURIOSITY = [
+const CURIOSITY: ReadonlyArray<{ v: Level; label: string; hint?: string }> = [
   { v: 1, label: 'Pek değil' },
   { v: 2, label: 'Biraz' },
   { v: 3, label: 'Çok' },
-] as const;
+];
 
-const CONFIDENCE = [
-  { v: 1, label: 'Tahmin' },
-  { v: 2, label: 'Sanırım' },
-  { v: 3, label: 'Eminim' },
-] as const;
+const CONFIDENCE: ReadonlyArray<{ v: Level; label: string; hint?: string }> = [
+  { v: 1, label: 'Tahmin', hint: 'emin değilim' },
+  { v: 2, label: 'Sanırım', hint: 'büyük ihtimalle' },
+  { v: 3, label: 'Eminim', hint: 'kesin biliyorum' },
+];
 
 const GRADES: Array<{ v: Rating; label: string; cls?: string }> = [
   { v: 1, label: 'Bilemedim', cls: 'again' },
@@ -163,7 +163,7 @@ export function Calisma() {
           }}
           onSuspend={() => {
             record({ type: 'askiya-al', cardId: item.cardId });
-            setToast('Kart askıya alındı. Kartlar sayfasından geri alabilirsin.');
+            setToast('Bu kart artık sorulmayacak. Kartlar sayfasından geri alabilirsin.');
             advance();
           }}
         />
@@ -171,7 +171,7 @@ export function Calisma() {
         <div className="study-card">
           <p>Bu kart artık destede yok.</p>
           <button type="button" className="btn" onClick={advance}>
-            Geç
+            Sonraki karta geç
           </button>
         </div>
       )}
@@ -249,7 +249,7 @@ function CardRunner({
   const gradeChoices: Array<{ v: Rating; label: string; cls?: string }> = isChoice
     ? match === 'tam'
       ? GRADES.slice(2)
-      : [{ v: 1, label: 'Devam', cls: 'again' }]
+      : [{ v: 1, label: 'Anladım, devam', cls: 'again' }]
     : GRADES;
 
   // Klavye: 1-3 güven/merak, cevaptan sonra 1-4 not
@@ -335,7 +335,7 @@ function CardRunner({
           <div className="stack" style={{ gap: 8 }}>
             <span className="prompt-label">
               {isNew ? 'Cevabı ne kadar merak ediyorsun?' : 'Ne kadar eminsin?'}
-              {!isNew && !isChoice && <span className="muted"> (yazmak zorunda değilsin)</span>}
+              <span className="muted"> Seçince cevap açılır.</span>
             </span>
             <div className="choices">
               {levels.map((l) => (
@@ -346,14 +346,21 @@ function CardRunner({
                   disabled={isChoice && !choice}
                   onClick={() => reveal(l.v)}
                 >
+                  <kbd className="key" aria-hidden>
+                    {l.v}
+                  </kbd>
                   {l.label}
-                  <small>Cevabı göster</small>
+                  {l.hint && <small>{l.hint}</small>}
                 </button>
               ))}
             </div>
-            {isChoice && !choice && <p className="muted small">Önce bir seçenek seç.</p>}
+            {isChoice && !choice ? (
+              <p className="muted small">Önce bir seçenek seç.</p>
+            ) : (
+              isNew && <p className="muted small">Merak ettiğin alanlardan daha çok yeni kart gelir.</p>
+            )}
           </div>
-          <p className="kbd-hint">Kısayol: 1 · 2 · 3 {isChoice ? '' : '· yazarken Enter kutudan çıkar'}</p>
+          {!isChoice && <p className="kbd-hint">Yazdıktan sonra Enter’a bas, ardından 1 · 2 · 3 ile seç.</p>}
         </>
       )}
 
@@ -401,7 +408,8 @@ function CardRunner({
 
           <div className="stack" style={{ gap: 8 }}>
             <span className="prompt-label">
-              {isChoice ? (match === 'tam' ? 'Doğru! Ne kadar kolaydı?' : 'Yanlış seçenek') : 'Ne kadar hatırladın?'}
+              {isChoice ? (match === 'tam' ? 'Doğru! Ne kadar kolaydı?' : 'Yanlış seçenek.') : 'Ne kadar hatırladın?'}
+              <span className="muted"> Altındaki süre, kartın yeniden sorulacağı zaman.</span>
             </span>
             <div className={`grades${gradeChoices.length === 2 ? ' two' : gradeChoices.length === 1 ? ' one' : ''}`}>
               {gradeChoices.map((g) => (
@@ -410,13 +418,16 @@ function CardRunner({
                   type="button"
                   className={`grade ${g.cls ?? ''}${!isChoice && suggested === g.v ? ' suggested' : ''}`}
                   onClick={() => grade(g.v)}
+                  aria-label={previews ? `${g.label}, ${previews[g.v]} sonra yeniden sorulur` : undefined}
                 >
+                  <kbd className="key" aria-hidden>
+                    {g.v}
+                  </kbd>
                   {g.label}
-                  {previews && <small>{previews[g.v]}</small>}
+                  {previews && <small>{previews[g.v]} sonra</small>}
                 </button>
               ))}
             </div>
-            <p className="kbd-hint">Kısayol: {gradeChoices.map((g) => g.v).join(' · ')}</p>
           </div>
         </>
       )}
@@ -440,7 +451,7 @@ function CardRunner({
             </label>
             <div className="row">
               <button type="submit" className="btn btn-sm">
-                Bildir
+                Hatayı bildir
               </button>
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFlagging(false)}>
                 Vazgeç
@@ -449,11 +460,21 @@ function CardRunner({
           </form>
         ) : (
           <>
-            <button type="button" className="link-btn small" onClick={() => setFlagging(true)}>
-              Hatalı mı?
+            <button
+              type="button"
+              className="link-btn small"
+              onClick={() => setFlagging(true)}
+              title="Kartta yanlışlık varsa not bırak; Claude Code düzeltir."
+            >
+              Hata bildir
             </button>
-            <button type="button" className="link-btn small" onClick={onSuspend}>
-              Askıya al
+            <button
+              type="button"
+              className="link-btn small"
+              onClick={onSuspend}
+              title="Kart çalışmadan çıkar; Kartlar sayfasından geri alabilirsin."
+            >
+              Bir daha sorma
             </button>
           </>
         )}

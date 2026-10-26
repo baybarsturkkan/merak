@@ -1,6 +1,6 @@
 ---
 name: kart-duzelt
-description: Uygulamada “Hatalı mı?” ile işaretlenen Merak kartlarını inceler, doğrular ve yerinde düzeltir; ardından işareti kaldırır. Kullanıcı /kart-duzelt yazdığında ya da bir kartın yanlış olduğunu söylediğinde kullan.
+description: Uygulamada “Hata bildir” ile işaretlenen Merak kartlarını inceler, doğrular ve yerinde düzeltir; ardından işareti kaldırır. Kullanıcı /kart-duzelt yazdığında ya da bir kartın yanlış olduğunu söylediğinde kullan.
 argument-hint: "[kart kimliği]"
 ---
 

@@ -75,7 +75,7 @@ export function ColumnChart({
         <span className="sr-only">{label}</span>
         <span />
         <button type="button" className="link-btn small" onClick={() => setTable((t) => !t)}>
-          {table ? 'Grafik' : 'Tablo'}
+          {table ? 'Grafik olarak gör' : 'Tablo olarak gör'}
         </button>
       </div>
       {table ? (
