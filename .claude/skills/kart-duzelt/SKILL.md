@@ -15,6 +15,7 @@ Argüman (isteğe bağlı kart kimliği): `$ARGUMENTS`
    - Kullanıcının notunu ve kartın tüm alanlarını (`veri/kartlar/<alan>.json`) oku.
    - İddiayı doğrula (gerekirse WebSearch). Kart gerçekten yanlışsa ya da belirsizse düzelt; doğruysa kullanıcıya kaynağıyla birlikte neden doğru olduğunu açıkla.
    - **Kimliği (`id`) asla değiştirme**; tekrar geçmişi kimliğe bağlı. Yalnızca içerik alanlarını düzenle. Yanıltıcıysa `accept` ekleyebilir, bağlamı netleştirebilirsin.
+   - Not görselle ilgiliyse (yanlış eser, açılmıyor, cevabı ele veriyor) görseli `npm run gorsel` ile yenisiyle değiştir ya da `image` alanını kaldır; `npm run gorsel -- --denetle` ile doğrula.
    - Kart kurtarılamayacak kadar kötüyse silme; kullanıcıya sor ve gerekirse uygulamada askıya almasını öner.
 3. Düzeltilen (ya da doğru olduğu açıklanan) her kart için işareti kaldır:
    ```

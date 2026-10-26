@@ -12,7 +12,7 @@ Bilimsel bulgulara dayalı genel kültür uygulaması. Dayanak: “Genel Kültü
 - FSRS durumu dosyada tutulmaz; olaylardan her yüklemede yeniden hesaplanır (`src/lib/state.ts` → `derive`).
 - Tarayıcı veriye GitHub API ile erişir (`src/store/github.ts`, fine-grained token). `npm run dev` iken `veri/` klasörü bir Vite ara katmanıyla sunulur (`tools/veri-plugin.ts`), token gerekmez.
 
-Önemli dosyalar: `src/lib/schema.ts` (kart, olay ve rehber şeması), `src/lib/guide.ts` + `src/pages/Rehber.tsx` (Rehber bölümü), `src/lib/srs.ts` (FSRS, oturum kuyruğu, merak ağırlıklı seçim), `src/lib/stats.ts`, `src/store/sync.ts` (önbellek + gönderim kuyruğu), `src/pages/Calisma.tsx` (çalışma akışı).
+Önemli dosyalar: `src/lib/schema.ts` (kart, olay ve rehber şeması), `src/lib/guide.ts` + `src/pages/Rehber.tsx` (Rehber bölümü), `src/lib/srs.ts` (FSRS, oturum kuyruğu, merak ağırlıklı seçim), `src/lib/stats.ts`, `src/store/sync.ts` (önbellek + gönderim kuyruğu), `src/pages/Calisma.tsx` (çalışma akışı), `src/components/CardImage.tsx` (kart görseli).
 
 ## Komutlar
 
@@ -24,9 +24,13 @@ npm run kontrol   # veri/kartlar ve veri/rehber şema ve yineleme denetimi — k
 npm run ozet      # merak, alanlar, bekleyen okumalar, hatalı kartlar, sıradaki kimlikler
 npm run ozet -- --sorular <alan|hepsi>   # var olan sorular (yinelemeyi önlemek için)
 npm run olay -- '<json>'                 # olay günlüğüne kayıt (okuma, isaret-cozuldu…)
+npm run gorsel -- --ara "<arama>"        # Wikimedia Commons'ta görsel ara
+npm run gorsel -- "File:<ad>"            # karta eklenecek hazır image nesnesi (lisans ve yazar Commons'tan)
+npm run gorsel -- --eksik [alan]         # görselsiz kartlar
+npm run gorsel -- --denetle              # tüm kart görselleri açılıyor mu
 ```
 
-Claude Code komutları (`.claude/skills/`): `/kart-ekle`, `/okuma`, `/hangisi`, `/oneri`, `/kart-duzelt`, `/rehber`.
+Claude Code komutları (`.claude/skills/`): `/kart-ekle`, `/okuma`, `/hangisi`, `/oneri`, `/kart-duzelt`, `/rehber`, `/gorsel`.
 
 ## Kart şeması
 
@@ -42,12 +46,22 @@ Claude Code komutları (`.claude/skills/`): `/kart-ekle`, `/okuma`, `/hangisi`, 
   "accept": ["kabul edilen", "başka yazımlar"],
   "why": "Neden doğru ya da neden önemli; bildiklerine bağlayan 1–3 cümle.",
   "source": { "readingId": "okuma-…", "ref": "Yazar, Eser" },
+  "image": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/…/960px-….jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:….jpg",
+    "alt": "Görselin ne gösterdiği, tek cümle.",
+    "credit": "Yazar · Kamu malı",
+    "show": "cevap",
+    "w": 960,
+    "h": 640
+  },
   "createdAt": "2026-10-26T12:00:00.000Z",
   "createdBy": "claude"
 }
 ```
 
 - `type: "hangisi"` kartlarında `options` (2–4 seçenek) zorunlu ve `answer` bunlardan biri olmalı; `accept` kullanılmaz.
+- `image` isteğe bağlıdır; `src`, `page`, `credit`, `w`, `h` alanlarını elle yazma, `npm run gorsel -- "File:…"` çıktısından al. `show`: `cevap` (varsayılan, cevaptan sonra) ya da `soru` (tanıma kartı: görsel soruyla gelir, atıf cevaptan sonra açılır).
 - `id` = `<alan>-<4 hane>`; sıradaki kimliği `npm run ozet` ya da `npm run kontrol` gösterir. Kimlik **asla değişmez ve yeniden kullanılmaz** (tekrar geçmişi kimliğe bağlıdır).
 - Alanlar: `tarih, siyaset-toplum, bilim, teknoloji, sanat, edebiyat, muzik-sinema, cografya, felsefe, ekonomi`.
 - Dosya, 2 boşluk girintili bir JSON dizisidir; yeni kartlar dizinin sonuna eklenir.
@@ -63,10 +77,15 @@ Claude Code komutları (`.claude/skills/`): `/kart-ekle`, `/okuma`, `/hangisi`, 
 7. **Okumadan kart:** her okumadan 2–3 kart; `source.readingId` okuma kimliğini, `source.ref` “Yazar, Eser”i taşır.
 8. Türkçe, doğal ve sade dil; tipografik tırnak “ ” kullan (JSON içinde " kaçırmak zorunda kalma).
 9. Kullanıcının bildiği kartlar silinmez. Hatalı kart, kimliği korunarak yerinde düzeltilir.
+10. **Görsel, bilgi katıyorsa** (ikili kodlama): eser, yapı, portre, yer, belge, nesne ya da bilimsel görüntü. Soyut kavramlara süs görseli koyma.
+    - Yalnızca Wikimedia Commons ve `npm run gorsel` ile; lisansı ve yazarı elle yazma. Telifi süren eserler (ör. Guernica, Dalí) Commons’ta yoksa görsel ekleme.
+    - Net, büyük, konunun kendisini gösteren görsel seç (pul, kopya ya da küçük ayrıntı değil).
+    - Tanıma kartı (`show: "soru"`): soru görsele değinir (“Bu tablonun ressamı kimdir?”); `alt` ve `context` cevabı söylemez. Görsel yüklenemezse `alt` gösterilir, o yüzden `alt` tek başına da ipucu olsun.
+    - Var olan karta görsel eklemek serbesttir (kimlik, soru, cevap aynı kalır).
 
 ## Her kart yazımından sonra
 
-1. `npm run kontrol` — hata kalmayana kadar düzelt.
+1. `npm run kontrol` — hata kalmayana kadar düzelt. Görsel eklendiyse `npm run gorsel -- --denetle`.
 2. Yeni kartları kullanıcıya kısaca göster (soru → cevap).
 3. Veri deposunu gönder:
    ```

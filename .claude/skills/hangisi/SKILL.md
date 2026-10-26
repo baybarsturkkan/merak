@@ -30,4 +30,5 @@ Argüman: `$ARGUMENTS`
    }
    ```
    Seçenekler 2–4 tane, `answer` birebir seçeneklerden biri; `accept` kullanma.
-5. `npm run kontrol` → kullanıcıya göster → `git -C veri add -A && git -C veri commit -m "hangisi: <çift>" && git -C veri push`
+   Görsel olarak ayırt edilen kavramlarda (sanat akımları, mimari üsluplar, benzer yapılar) görselli kart yaz: örnek bir eserin görseli soruyla gelir (`image.show: "soru"`), soru “Bu yapı hangi üslupta?” gibi görsele değinir. Görseli `npm run gorsel` ile bul (CLAUDE.md → kural 10).
+5. `npm run kontrol` (görsel varsa `npm run gorsel -- --denetle`) → kullanıcıya göster → `git -C veri add -A && git -C veri commit -m "hangisi: <çift>" && git -C veri push`

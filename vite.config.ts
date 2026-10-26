@@ -35,6 +35,18 @@ export default defineConfig(({ command }) => ({
         navigateFallback: 'index.html',
         // GitHub API yanıtları önbelleğe alınmaz; veriler IndexedDB'de tutulur
         navigateFallbackDenylist: [/^\/__veri/],
+        // Kart görselleri (Wikimedia Commons) ilk görüldüğünde saklanır; çevrimdışı oturumda da görünür
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.hostname === 'upload.wikimedia.org' || url.hostname === 'thumb.wikimedia.org',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gorseller',
+              expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 180 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

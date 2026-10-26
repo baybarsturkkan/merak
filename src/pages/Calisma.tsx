@@ -17,6 +17,7 @@ import {
 import { matchAnswer, type MatchResult } from '../lib/match';
 import { formatInterval } from '../lib/dates';
 import { IconCheck, IconInfo, IconWarn, IconX } from '../components/Icons';
+import { CardImage, preloadImages } from '../components/CardImage';
 
 type Level = 1 | 2 | 3;
 type Rating = 1 | 2 | 3 | 4;
@@ -81,6 +82,11 @@ export function Calisma() {
       }),
     );
   }, [data, queue, loading]);
+
+  useEffect(() => {
+    if (!queue || !data) return;
+    preloadImages(queue.flatMap((it) => data.byId.get(it.cardId)?.card.image?.src ?? []));
+  }, [queue, data]);
 
   const done = !!queue && queue.length > 0 && index >= queue.length;
   useEffect(() => {
@@ -258,6 +264,7 @@ function CardRunner({
         return;
       }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (document.querySelector('dialog[open]')) return; // görsel büyütülmüşken not verilmesin
       const n = Number(e.key);
       if (stepRef.current === 'soru' && n >= 1 && n <= 3) {
         e.preventDefault(); // tuş, sonraki kartın kutusuna yazılmasın
@@ -284,6 +291,9 @@ function CardRunner({
       </div>
 
       {card.context && <p className="context">{card.context}</p>}
+      {card.image?.show === 'soru' && (
+        <CardImage image={card.image} hideCredit={step === 'soru'} compact={step === 'cevap'} />
+      )}
       <h2 className={`question${step === 'cevap' ? ' small' : ''}`}>{card.question}</h2>
 
       {step === 'soru' && (
@@ -381,6 +391,8 @@ function CardRunner({
               </span>
             </div>
           )}
+
+          {card.image?.show === 'cevap' && <CardImage image={card.image} />}
 
           <details className="why" open={isNew || confidentMiss || match === 'farkli'}>
             <summary>Neden?</summary>

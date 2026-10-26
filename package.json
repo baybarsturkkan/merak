@@ -12,8 +12,9 @@
     "test": "vitest run",
     "kontrol": "tsx scripts/kontrol.ts",
     "ozet": "tsx scripts/ozet.ts",
-    "ikon": "pwa-assets-generator",
-    "olay": "tsx scripts/olay.ts"
+    "olay": "tsx scripts/olay.ts",
+    "gorsel": "tsx scripts/gorsel.ts",
+    "ikon": "pwa-assets-generator"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

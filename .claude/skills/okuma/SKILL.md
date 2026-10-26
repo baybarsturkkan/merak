@@ -29,8 +29,9 @@ Argüman: `$ARGUMENTS`
    - `source`: `{ "readingId": "<okuma kimliği>", "ref": "<Yazar>, <Eser>" }`, `createdBy: "claude"`, `createdAt`: şimdiki ISO zaman.
    - Yinelemeyi önlemek için gerekirse `npm run ozet -- --sorular <alan>`.
    - Okumada karıştırılabilecek iki kavram varsa bir kartı “hangisi?” yap.
+   - Kartın konusu görülebilir bir şeyse (eser, yapı, kişi, yer) `npm run gorsel` ile `image` ekle (CLAUDE.md → kural 10).
    - Kartları `veri/kartlar/<alan>.json` dizisinin sonuna ekle.
-5. `npm run kontrol` — hata kalmayana kadar düzelt.
+5. `npm run kontrol` — hata kalmayana kadar düzelt. Görsel eklediysen `npm run gorsel -- --denetle`.
 6. Kullanıcıya kartları göster (soru → cevap, alan).
 7. Gönder:
    ```

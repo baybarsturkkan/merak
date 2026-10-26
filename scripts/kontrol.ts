@@ -17,7 +17,7 @@ const errors: string[] = [];
 const warnings: string[] = [];
 const ids = new Map<string, string>();
 const questions = new Map<string, string>();
-const rows: Array<{ domain: string; total: number; hangisi: number; next: string }> = [];
+const rows: Array<{ domain: string; total: number; hangisi: number; gorsel: number; next: string }> = [];
 
 // "19. yüzyıl" gibi sıra sayılarındaki nokta cümle sonu sayılmaz
 const sentences = (s: string) => s.split(/(?<!\d)[.!?…](?:\s|$)/).filter((x) => x.trim().length > 0).length;
@@ -52,11 +52,28 @@ for (const name of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) {
     if (c.answer.length > 60) warnings.push(`${where}: cevap uzun (${c.answer.length} karakter); yazarak cevaplamak zorlaşır`);
     if (c.tags.length === 0) warnings.push(`${where}: etiket yok`);
     if (c.why.length < 40) warnings.push(`${where}: "neden" alanı çok kısa`);
+    if (c.image) {
+      const img = c.image;
+      if (img.alt.startsWith('<')) errors.push(`${where}: görselin alt metni yazılmamış`);
+      if (img.show === 'soru') {
+        const ans = normalize(c.answer);
+        if (ans.length > 2 && normalize(img.alt).includes(ans)) {
+          warnings.push(`${where}: görsel soruyla geliyor ama alt metni cevabı içeriyor`);
+        }
+        if (c.context && ans.length > 2 && normalize(c.context).includes(ans)) {
+          warnings.push(`${where}: tanıma kartının bağlamı cevabı içeriyor`);
+        }
+        if (!/(^|[\s“"])(bu|şu|buradaki|görseldeki|resimdeki|fotoğraftaki|tablodaki)(?=[\s,?’'”]|$)/i.test(c.question)) {
+          warnings.push(`${where}: görsel soruyla geliyor ama soru görsele değinmiyor (“Bu tablo…”, “Bu yapı…”)`);
+        }
+      }
+    }
   }
   rows.push({
     domain,
     total: cards.length,
     hangisi: cards.filter((c) => c.type === 'hangisi').length,
+    gorsel: cards.filter((c) => c.image).length,
     next: `${domain}-${String(maxNum + 1).padStart(4, '0')}`,
   });
 }
@@ -107,12 +124,15 @@ if (existsSync(guideDir)) {
   }
 }
 
-console.log('\nAlan              Kart  Hangisi  Sıradaki kimlik');
+console.log('\nAlan              Kart  Hangisi  Görsel  Sıradaki kimlik');
 for (const r of rows) {
-  console.log(`${r.domain.padEnd(17)} ${String(r.total).padStart(4)}  ${String(r.hangisi).padStart(7)}  ${r.next}`);
+  console.log(
+    `${r.domain.padEnd(17)} ${String(r.total).padStart(4)}  ${String(r.hangisi).padStart(7)}  ${String(r.gorsel).padStart(6)}  ${r.next}`,
+  );
 }
 const total = rows.reduce((a, r) => a + r.total, 0);
-console.log(`${'Toplam'.padEnd(17)} ${String(total).padStart(4)}\n`);
+const totalImg = rows.reduce((a, r) => a + r.gorsel, 0);
+console.log(`${'Toplam'.padEnd(17)} ${String(total).padStart(4)}  ${''.padStart(7)}  ${String(totalImg).padStart(6)}\n`);
 
 if (guideRows.length) {
   console.log('Rehber            Kaynak  Türkçe  Adım  Sıradaki kimlik');

@@ -19,7 +19,8 @@ Konu: `$ARGUMENTS`
    - Konuda doğal olarak karıştırılan iki şey varsa en az bir “hangisi?” kartı ekle.
    - Emin olmadığın her sayıyı ya da tarihi WebSearch ile doğrula.
    - `createdBy: "claude"`, `createdAt`: şimdiki ISO zaman; kimlikler sıradaki kimlikten itibaren artar.
+   - Görsel bilgi katan kartlara (eser, yapı, kişi, yer, nesne) `image` ekle: `npm run gorsel -- --ara "<arama>"` → `npm run gorsel -- "File:…"` (CLAUDE.md → kural 10). Konu görsel tanımaya uygunsa (sanat, mimari) bir kartı tanıma kartı (`show: "soru"`) yap.
 5. Kartları `veri/kartlar/<alan>.json` dizisinin sonuna ekle.
-6. `npm run kontrol` — temiz olana kadar düzelt.
+6. `npm run kontrol` — temiz olana kadar düzelt. Görsel eklediysen `npm run gorsel -- --denetle`.
 7. Kartları kullanıcıya göster (soru → cevap).
 8. `git -C veri add -A && git -C veri commit -m "kart: <konu> (+N)" && git -C veri push`

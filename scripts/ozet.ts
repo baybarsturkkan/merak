@@ -31,7 +31,8 @@ if (qi >= 0) {
   for (const d of domains) {
     console.log(`\n## ${DOMAIN_LABELS[d]} (${d}) — sıradaki kimlik: ${nextId(d)}`);
     for (const s of data.states.filter((x) => x.card.domain === d)) {
-      console.log(`- ${s.card.id}: ${s.card.question} → ${s.card.answer}`);
+      const img = s.card.image ? (s.card.image.show === 'soru' ? ' [görselden]' : ' [görsel]') : '';
+      console.log(`- ${s.card.id}: ${s.card.question} → ${s.card.answer}${img}`);
     }
   }
   process.exit(0);
@@ -48,14 +49,15 @@ console.log(`- Okuma: ${data.readings.length} · ayarlar: günlük ${data.settin
 if (problems.length) console.log(`- ⚠ Okunamayan satır: ${problems.length} (ilk: ${problems[0]})`);
 
 console.log('\n## Alanlar (merak = yeni kartlarda verilen 1–3 puanın ortalaması)\n');
-console.log('| Alan | Kart | Yeni | Merak | 30g hatırlama | Sıradaki kimlik |');
-console.log('|---|---|---|---|---|---|');
+console.log('| Alan | Kart | Görsel | Yeni | Merak | 30g hatırlama | Sıradaki kimlik |');
+console.log('|---|---|---|---|---|---|---|');
 const rows = DOMAINS.map((d) => {
   const st = data.states.filter((s) => s.card.domain === d);
   const ids = new Set(st.map((s) => s.card.id));
   return {
     d,
     total: st.length,
+    img: st.filter((s) => s.card.image).length,
     fresh: st.filter((s) => s.isNew).length,
     cur: data.domainCuriosity[d],
     rec: trueRetention(data.reviews, addDays(now, -30), (r) => ids.has(r.cardId)),
@@ -63,7 +65,7 @@ const rows = DOMAINS.map((d) => {
 }).sort((a, b) => (b.cur ?? 0) - (a.cur ?? 0));
 for (const r of rows) {
   console.log(
-    `| ${DOMAIN_LABELS[r.d]} (${r.d}) | ${r.total} | ${r.fresh} | ${r.cur ? r.cur.toFixed(1) : '—'} | ${pct(r.rec.rate)} (${r.rec.n}) | ${nextId(r.d)} |`,
+    `| ${DOMAIN_LABELS[r.d]} (${r.d}) | ${r.total} | ${r.img} | ${r.fresh} | ${r.cur ? r.cur.toFixed(1) : '—'} | ${pct(r.rec.rate)} (${r.rec.n}) | ${nextId(r.d)} |`,
   );
 }
 

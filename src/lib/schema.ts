@@ -29,6 +29,27 @@ export const DOMAIN_LABELS: Record<Domain, string> = {
   ekonomi: 'Ekonomi',
 };
 
+/** Görseller yalnızca Wikimedia Commons'tan gelir (ücretsiz, açık lisanslı, CORS'a açık) */
+export const IMAGE_HOST = /^https:\/\/(upload|thumb)\.wikimedia\.org\//;
+
+export const CardImageSchema = z.object({
+  /** Wikimedia küçük boyut adresi (960 px); `npm run gorsel` üretir */
+  src: z.string().url().regex(IMAGE_HOST, 'görsel Wikimedia Commons’tan olmalı'),
+  /** Commons dosya sayfası (atıf bağlantısı) */
+  page: z.string().url(),
+  /** Görselin kısa açıklaması; show "soru" ise cevabı ele vermez */
+  alt: z.string().min(5),
+  /** "Yazar · Lisans", ör. "Leonardo da Vinci · Kamu malı" */
+  credit: z.string().min(2),
+  /** soru: görsel soruyla gelir (tanıma kartı) · cevap: cevaptan sonra destek olarak gelir */
+  show: z.enum(['soru', 'cevap']).default('cevap'),
+  /** Piksel boyutu: görsel yüklenirken yer ayırmak için */
+  w: z.number().int().positive().optional(),
+  h: z.number().int().positive().optional(),
+});
+
+export type CardImage = z.infer<typeof CardImageSchema>;
+
 export const CardSchema = z
   .object({
     id: z.string().regex(/^[a-z]+(-[a-z]+)*-\d{4}$/, 'id biçimi: <alan>-0001'),
@@ -45,6 +66,7 @@ export const CardSchema = z
     why: z.string().min(10),
     /** Yalnızca "hangisi" kartlarında: 2–4 seçenek, cevap bunlardan biri */
     options: z.array(z.string()).min(2).max(4).optional(),
+    image: CardImageSchema.optional(),
     source: z
       .object({
         readingId: z.string().optional(),

@@ -256,6 +256,28 @@ describe('şema', () => {
     expect(CardSchema.safeParse(card('siyaset-toplum-0001')).success).toBe(true);
   });
 
+  it('görsel alanı: varsayılan cevaptan sonra, yalnızca Wikimedia', () => {
+    const image = {
+      src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/X.jpg/960px-X.jpg',
+      page: 'https://commons.wikimedia.org/wiki/File:X.jpg',
+      alt: 'Bir caminin dış görünüşü',
+      credit: 'Bilinmeyen · Kamu malı',
+    };
+    const ok = CardSchema.safeParse({ ...card('sanat-0001'), image });
+    expect(ok.success).toBe(true);
+    expect(ok.data?.image?.show).toBe('cevap');
+    const soru = CardSchema.safeParse({ ...card('sanat-0001'), image: { ...image, show: 'soru', w: 960, h: 640 } });
+    expect(soru.data?.image?.show).toBe('soru');
+    const foreign = CardSchema.safeParse({ ...card('sanat-0001'), image: { ...image, src: 'https://example.com/x.jpg' } });
+    expect(foreign.success).toBe(false);
+  });
+
+  it('görselsiz eski kart aynen ayrışır', () => {
+    const r = CardSchema.safeParse(card('tarih-0001'));
+    expect(r.success).toBe(true);
+    expect(r.data?.image).toBeUndefined();
+  });
+
   it('bozuk olay satırlarını atlar', () => {
     const good = JSON.stringify(review('a', '2026-10-10T09:00:00Z', 3));
     const { events, errors } = parseEvents(`${good}\n{bozuk\n{"type":"yok"}\n`);

@@ -4,6 +4,7 @@ import { dueLabel, num, pct } from '../app/format';
 import { DOMAINS, DOMAIN_LABELS, type Domain } from '../lib/schema';
 import { cardPhase, PHASE_LABELS, type CardPhase, type CardState } from '../lib/state';
 import { normalize } from '../lib/match';
+import { CardImage } from '../components/CardImage';
 
 type Filter = 'hepsi' | CardPhase | 'askida' | 'hatali';
 
@@ -122,12 +123,14 @@ function CardRow({ s, now, open, onToggle }: { s: CardState; now: Date; open: bo
             </span>
             {s.suspended && <span className="chip">Askıda</span>}
             {s.flag && <span className="chip chip-warn">Hatalı işaretli</span>}
+            {c.image && <span className="chip">{c.image.show === 'soru' ? 'Görselden' : 'Görsel'}</span>}
             {!s.isNew && !s.suspended && <span className="muted small">{dueLabel(s.fsrs.due, now)}</span>}
           </div>
         </div>
       </button>
       {open && (
         <div className="item-body">
+          {c.image && <CardImage image={c.image} compact />}
           {c.context && <p className="muted">{c.context}</p>}
           <p>
             <span className="muted">Cevap: </span>
