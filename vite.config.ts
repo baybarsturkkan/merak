@@ -20,8 +20,8 @@ export default defineConfig(({ command }) => ({
         start_url: '.',
         scope: '.',
         display: 'standalone',
-        background_color: '#f9f9f7',
-        theme_color: '#2a78d6',
+        background_color: '#f6f3ec',
+        theme_color: '#3550d4',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -30,7 +30,8 @@ export default defineConfig(({ command }) => ({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // Yazı tiplerinin yalnızca Latin alt kümeleri (Türkçe latin-ext içinde) önbelleğe alınır
+        globPatterns: ['**/*.{js,css,html,svg,png,ico}', 'assets/*latin*.woff2'],
         navigateFallback: 'index.html',
         // GitHub API yanıtları önbelleğe alınmaz; veriler IndexedDB'de tutulur
         navigateFallbackDenylist: [/^\/__veri/],

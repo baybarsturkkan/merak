@@ -12,12 +12,12 @@ type AppEvent = { id: string };
 export function veriPlugin(dir = 'veri'): Plugin {
   const root = path.resolve(dir);
   const sha = (s: string) => createHash('sha1').update(s).digest('hex');
-  const readable = /^(kartlar\/[\w.-]+\.json|kayit\/[\w.-]+\.jsonl)$/;
+  const readable = /^((kartlar|rehber)\/[\w.-]+\.json|kayit\/[\w.-]+\.jsonl)$/;
   const writable = /^kayit\/[\w.-]+\.jsonl$/;
 
   async function listFiles() {
     const out: Array<{ path: string; sha: string }> = [];
-    for (const sub of ['kartlar', 'kayit']) {
+    for (const sub of ['kartlar', 'rehber', 'kayit']) {
       let names: string[] = [];
       try {
         names = await fs.readdir(path.join(root, sub));

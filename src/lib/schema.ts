@@ -107,6 +107,8 @@ export const ReadingSchema = z.object({
   /** YYYY-MM-DD */
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   notes: z.string().optional(),
+  /** Rehberden eklendiyse kaynağın kimliği (ör. "tarih-k03") */
+  guideId: z.string().optional(),
 });
 
 export type Reading = z.infer<typeof ReadingSchema>;
@@ -203,4 +205,81 @@ export function parseEvents(text: string): { events: AppEvent[]; errors: string[
     }
   });
   return { events, errors };
+}
+
+/* ---------- Rehber (rehber/<alan>.json) ---------- */
+
+/** "genel": alanlar arası kaynaklar (dergiler, podcast'ler, kanallar) */
+export const GUIDE_AREAS = ['genel', ...DOMAINS] as const;
+export type GuideArea = (typeof GUIDE_AREAS)[number];
+
+export const GUIDE_AREA_LABELS: Record<GuideArea, string> = { genel: 'Her alandan', ...DOMAIN_LABELS };
+
+export const SOURCE_KINDS = ['kitap', 'makale', 'podcast', 'belgesel', 'video', 'kurs', 'dergi', 'site'] as const;
+export type SourceKind = (typeof SOURCE_KINDS)[number];
+
+export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
+  kitap: 'Kitap',
+  makale: 'Makale',
+  podcast: 'Podcast',
+  belgesel: 'Belgesel',
+  video: 'Video',
+  kurs: 'Kurs',
+  dergi: 'Dergi',
+  site: 'Site',
+};
+
+export const LEVELS = ['baslangic', 'orta', 'ileri'] as const;
+export type Level = (typeof LEVELS)[number];
+export const LEVEL_LABELS: Record<Level, string> = { baslangic: 'Başlangıç', orta: 'Orta', ileri: 'İleri' };
+
+export const GuideItemSchema = z.object({
+  /** <alan>-k01; asla değişmez (okuma günlüğü buna bağlanır) */
+  id: z.string().regex(/^[a-z]+(-[a-z]+)*-k\d{2,3}$/, 'id biçimi: <alan>-k01'),
+  title: z.string().min(1),
+  author: z.string().optional(),
+  /** Çeviriyse özgün adı */
+  original: z.string().optional(),
+  kind: z.enum(SOURCE_KINDS),
+  level: z.enum(LEVELS),
+  /** tr: Türkçesi var, en: yalnızca İngilizce */
+  lang: z.enum(['tr', 'en']),
+  free: z.boolean().optional(),
+  url: z.string().url().optional(),
+  /** Yaklaşık süre ya da hacim: "~350 sayfa", "45 dk'lık bölümler" */
+  size: z.string().optional(),
+  /** Neden bu kaynak: ne kazandırır, kimin için */
+  why: z.string().min(20),
+});
+
+export type GuideItem = z.infer<typeof GuideItemSchema>;
+
+export const GuideSchema = z.object({
+  area: z.enum(GUIDE_AREAS),
+  updatedAt: z.string(),
+  /** Alana nasıl girilir: 2–4 cümle */
+  intro: z.string().min(20),
+  /** Yol haritası: sırayla izlenecek adımlar; her adım kaynak kimliklerine bağlanır */
+  path: z
+    .array(z.object({ title: z.string(), text: z.string(), items: z.array(z.string()).default([]) }))
+    .min(1),
+  /** Kısa ipuçları: nasıl okunur, nelere dikkat edilir */
+  tips: z.array(z.string()).default([]),
+  items: z.array(GuideItemSchema).min(1),
+});
+
+export type Guide = z.infer<typeof GuideSchema>;
+
+export function parseGuide(text: string): { guide?: Guide; errors: string[] } {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch (e) {
+    return { errors: [`JSON okunamadı: ${(e as Error).message}`] };
+  }
+  const r = GuideSchema.safeParse(raw);
+  if (!r.success) {
+    return { errors: r.error.issues.map((x) => `${x.path.join('.') || '(kök)'}: ${x.message}`) };
+  }
+  return { guide: r.data, errors: [] };
 }

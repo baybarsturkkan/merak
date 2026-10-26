@@ -18,8 +18,22 @@ const KINDS: Array<{ v: Reading['kind']; label: string }> = [
 
 const kindLabel = (k: Reading['kind']) => KINDS.find((x) => x.v === k)?.label ?? k;
 
-function emptyDraft(): Reading {
+export function emptyDraft(): Reading {
   return { id: '', title: '', author: '', kind: 'makale', url: '', date: localDateKey(new Date()), notes: '' };
+}
+
+/** Formdan gelen okumayı kaydedilecek biçime getirir: boş alanları atar, kimlik üretir */
+export function cleanReading(r: Reading): Reading {
+  return {
+    id: r.id || `okuma-${newId().slice(0, 10)}`,
+    title: r.title.trim(),
+    kind: r.kind,
+    date: r.date,
+    ...(r.author?.trim() ? { author: r.author.trim() } : {}),
+    ...(r.url?.trim() ? { url: r.url.trim() } : {}),
+    ...(r.notes?.trim() ? { notes: r.notes.trim() } : {}),
+    ...(r.guideId ? { guideId: r.guideId } : {}),
+  };
 }
 
 export function Okuma() {
@@ -30,15 +44,7 @@ export function Okuma() {
   if (!data) return null;
 
   const save = (r: Reading) => {
-    const clean: Reading = {
-      id: r.id || `okuma-${newId().slice(0, 10)}`,
-      title: r.title.trim(),
-      kind: r.kind,
-      date: r.date,
-      ...(r.author?.trim() ? { author: r.author.trim() } : {}),
-      ...(r.url?.trim() ? { url: r.url.trim() } : {}),
-      ...(r.notes?.trim() ? { notes: r.notes.trim() } : {}),
-    };
+    const clean = cleanReading(r);
     record({ type: 'okuma', reading: clean });
     setDraft(null);
     setOpen(clean.id);
@@ -177,7 +183,17 @@ function ReadingDetail({ reading, onEdit, onDelete }: { reading: ReadingView; on
   );
 }
 
-function ReadingForm({ draft, onSave, onCancel }: { draft: Reading; onSave: (r: Reading) => void; onCancel: () => void }) {
+export function ReadingForm({
+  draft,
+  onSave,
+  onCancel,
+  heading,
+}: {
+  draft: Reading;
+  onSave: (r: Reading) => void;
+  onCancel: () => void;
+  heading?: string;
+}) {
   const [r, setR] = useState<Reading>(draft);
   const set = (patch: Partial<Reading>) => setR((x) => ({ ...x, ...patch }));
   return (
@@ -188,7 +204,7 @@ function ReadingForm({ draft, onSave, onCancel }: { draft: Reading; onSave: (r: 
         if (r.title.trim()) onSave(r);
       }}
     >
-      <h2>{draft.id ? 'Okumayı düzenle' : 'Yeni okuma'}</h2>
+      <h2>{heading ?? (draft.id ? 'Okumayı düzenle' : 'Yeni okuma')}</h2>
       <label className="field">
         Başlık
         <input type="text" required value={r.title} onChange={(e) => set({ title: e.target.value })} autoFocus />

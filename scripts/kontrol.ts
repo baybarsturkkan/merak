@@ -1,10 +1,10 @@
 /**
- * npm run kontrol — veri/kartlar altındaki desteleri denetler.
+ * npm run kontrol — veri/kartlar altındaki desteleri ve veri/rehber altındaki rehberleri denetler.
  * Hata varsa 1 ile çıkar. Claude Code kart ekledikten sonra bunu çalıştırır.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { DOMAINS, parseDeck, type Card, type Domain } from '../src/lib/schema';
+import { DOMAINS, GUIDE_AREAS, parseDeck, parseGuide, type Card, type Domain } from '../src/lib/schema';
 import { normalize } from '../src/lib/match';
 
 const dir = path.resolve(process.argv[2] ?? 'veri/kartlar');
@@ -61,12 +61,68 @@ for (const name of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) {
   });
 }
 
+// ---------- Rehberler ----------
+const guideDir = path.join(path.dirname(dir), 'rehber');
+const guideRows: Array<{ area: string; items: number; steps: number; tr: number; next: string }> = [];
+if (existsSync(guideDir)) {
+  const guideIds = new Map<string, string>();
+  for (const name of readdirSync(guideDir).filter((f) => f.endsWith('.json')).sort()) {
+    const area = name.replace(/\.json$/, '');
+    const where = `rehber/${name}`;
+    if (!(GUIDE_AREAS as readonly string[]).includes(area)) {
+      errors.push(`${where}: bilinmeyen alan. Geçerli: ${GUIDE_AREAS.join(', ')}`);
+      continue;
+    }
+    const { guide, errors: ge } = parseGuide(readFileSync(path.join(guideDir, name), 'utf8'));
+    for (const e of ge) errors.push(`${where} ${e}`);
+    if (!guide) continue;
+    if (guide.area !== area) errors.push(`${where}: area "${guide.area}" dosya adıyla uyuşmuyor`);
+    const local = new Set<string>();
+    const titles = new Set<string>();
+    let maxNum = 0;
+    for (const it of guide.items) {
+      if (!it.id.startsWith(`${area}-k`)) errors.push(`${where} ${it.id}: kimlik "${area}-k" ile başlamalı`);
+      if (guideIds.has(it.id)) errors.push(`${where} ${it.id}: kimlik ${guideIds.get(it.id)} içinde de var`);
+      guideIds.set(it.id, name);
+      local.add(it.id);
+      maxNum = Math.max(maxNum, Number(it.id.split('-k').pop()));
+      const t = normalize(it.title);
+      if (titles.has(t)) errors.push(`${where} ${it.id}: aynı başlık iki kez`);
+      titles.add(t);
+      if (it.why.length > 420) warnings.push(`${where} ${it.id}: "why" uzun (${it.why.length} karakter)`);
+      if (it.free && !it.url) warnings.push(`${where} ${it.id}: ücretsiz kaynak için bağlantı yok`);
+    }
+    for (const step of guide.path) {
+      for (const id of step.items) {
+        if (!local.has(id)) errors.push(`${where}: yol adımı "${step.title}" bilinmeyen kaynağa bağlı: ${id}`);
+      }
+    }
+    guideRows.push({
+      area,
+      items: guide.items.length,
+      steps: guide.path.length,
+      tr: guide.items.filter((i) => i.lang === 'tr').length,
+      next: `${area}-k${String(maxNum + 1).padStart(2, '0')}`,
+    });
+  }
+}
+
 console.log('\nAlan              Kart  Hangisi  Sıradaki kimlik');
 for (const r of rows) {
   console.log(`${r.domain.padEnd(17)} ${String(r.total).padStart(4)}  ${String(r.hangisi).padStart(7)}  ${r.next}`);
 }
 const total = rows.reduce((a, r) => a + r.total, 0);
 console.log(`${'Toplam'.padEnd(17)} ${String(total).padStart(4)}\n`);
+
+if (guideRows.length) {
+  console.log('Rehber            Kaynak  Türkçe  Adım  Sıradaki kimlik');
+  for (const r of guideRows) {
+    console.log(
+      `${r.area.padEnd(17)} ${String(r.items).padStart(6)}  ${String(r.tr).padStart(6)}  ${String(r.steps).padStart(4)}  ${r.next}`,
+    );
+  }
+  console.log('');
+}
 
 if (warnings.length) {
   console.log(`Uyarılar (${warnings.length}):`);
@@ -78,4 +134,4 @@ if (errors.length) {
   for (const e of errors) console.error(`  ✗ ${e}`);
   process.exit(1);
 }
-console.log('✓ Tüm desteler geçerli.');
+console.log(guideRows.length ? '✓ Tüm desteler ve rehberler geçerli.' : '✓ Tüm desteler geçerli.');

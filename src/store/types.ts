@@ -15,7 +15,7 @@ export interface Store {
   readonly kind: 'github' | 'local';
   /** Cache anahtarı: farklı depoların önbelleği karışmasın */
   readonly id: string;
-  /** kartlar/*.json ve kayit/*.jsonl dosyaları */
+  /** kartlar/*.json, rehber/*.json ve kayit/*.jsonl dosyaları */
   list(): Promise<RemoteFile[]>;
   read(file: RemoteFile): Promise<string>;
   /**
@@ -48,5 +48,5 @@ export function b64decode(b64: string): string {
 }
 
 export function isDataFile(path: string): boolean {
-  return /^kartlar\/[^/]+\.json$/.test(path) || /^kayit\/[^/]+\.jsonl$/.test(path);
+  return /^(kartlar|rehber)\/[^/]+\.json$/.test(path) || /^kayit\/[^/]+\.jsonl$/.test(path);
 }

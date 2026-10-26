@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export const ROUTES = ['bugun', 'calis', 'okuma', 'istatistik', 'kartlar', 'ayarlar'] as const;
+export const ROUTES = ['bugun', 'calis', 'okuma', 'rehber', 'istatistik', 'kartlar', 'ayarlar'] as const;
 export type Route = (typeof ROUTES)[number];
 
 function parse(): Route {

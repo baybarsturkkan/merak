@@ -108,6 +108,9 @@ export function Istatistik() {
             <p>Son 30 gün · dikey çizgi hedef {pct(data.settings.retention)}</p>
           </div>
         </div>
+        {domains.every((d) => d.recall30.n === 0) ? (
+          <p className="muted">Tekrar yaptıkça her alandaki gerçek hatırlama oranın burada görünecek.</p>
+        ) : (
         <HBars
           target={data.settings.retention}
           rows={domains.map((d) => ({
@@ -120,6 +123,7 @@ export function Istatistik() {
             }`,
           }))}
         />
+        )}
       </section>
 
       <section className="panel">
@@ -134,6 +138,7 @@ export function Istatistik() {
         ) : (
           <HBars
             emptyText="henüz yok"
+            tone="spark"
             rows={[...domains]
               .sort((a, b) => (b.curiosity ?? 0) - (a.curiosity ?? 0))
               .map((d) => ({

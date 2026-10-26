@@ -17,6 +17,7 @@ description: Kullanıcının merak haritasına, zayıf alanlarına ve okuma gün
    - 2’si merakın yüksek olduğu alanlardan, 1’i keşif için az çalışılan bir alandan.
    - Somut ol: eser adı, yazar, neden bu kullanıcıya uygun (bir cümle), yaklaşık süre. Türkçesi olanları tercih et; makale/podcast gibi kısa seçenekleri de kat.
    - Belgedeki bulgu: popüler yazarlara ve dergilere aşinalık genel bilgiyi güçlü biçimde öngörüyor; tanınmış popüler bilim/tarih yazarlarını ve dergilerini öner.
+   - Önce `veri/rehber/<alan>.json` rehberlerine bak: yol haritasında sıradaki ve günlükte olmayan kaynakları tercih et (günlükteki okumaların `guideId`’si rehber kimliğidir). Rehberde olmayan bir eser önerirsen, kullanıcı isterse `/rehber` ile rehbere eklenebileceğini söyle.
    - Önerdiğin eserin gerçekten var olduğundan emin değilsen WebSearch ile doğrula.
 4. **3 kart konusu öner** (her biri tek satır, hangi alana gireceği ile). Kullanıcı isterse `/kart-ekle <konu>` ile yazılabileceğini söyle.
 5. Kart yazma ya da veri deposunu değiştirme; bu komut yalnızca öneri verir.

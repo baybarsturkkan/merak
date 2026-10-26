@@ -7,11 +7,12 @@ Bilimsel bulgulara dayalı genel kültür uygulaması. Dayanak: “Genel Kültü
 - **Uygulama** (bu depo, herkese açık): Vite + React + TypeScript, `ts-fsrs`, `zod`. GitHub Pages’e `.github/workflows/deploy.yml` ile yayınlanır: https://baybarsturkkan.github.io/merak/
 - **Veri** (`veri/`, ayrı ve özel depo `baybarsturkkan/merak-veri`, bu depoda gitignore’da):
   - `veri/kartlar/<alan>.json` — kart içeriği. **Yalnızca Claude Code yazar.**
+  - `veri/rehber/<alan>.json` — Rehber sekmesindeki kaynak rehberleri (alanlar + `genel`). Claude Code `/rehber` ile araştırıp yazar; şema `GuideSchema`, kaynak kimliği `<alan>-k01` asla değişmez.
   - `veri/kayit/<YYYY-MM>-<cihaz>.jsonl` — olay günlüğü. Her cihaz yalnızca kendi dosyasına ekler; Claude Code `-claude` dosyasına `npm run olay` ile yazar. Var olan satırlar asla değiştirilmez.
 - FSRS durumu dosyada tutulmaz; olaylardan her yüklemede yeniden hesaplanır (`src/lib/state.ts` → `derive`).
 - Tarayıcı veriye GitHub API ile erişir (`src/store/github.ts`, fine-grained token). `npm run dev` iken `veri/` klasörü bir Vite ara katmanıyla sunulur (`tools/veri-plugin.ts`), token gerekmez.
 
-Önemli dosyalar: `src/lib/schema.ts` (kart ve olay şeması), `src/lib/srs.ts` (FSRS, oturum kuyruğu, merak ağırlıklı seçim), `src/lib/stats.ts`, `src/store/sync.ts` (önbellek + gönderim kuyruğu), `src/pages/Calisma.tsx` (çalışma akışı).
+Önemli dosyalar: `src/lib/schema.ts` (kart, olay ve rehber şeması), `src/lib/guide.ts` + `src/pages/Rehber.tsx` (Rehber bölümü), `src/lib/srs.ts` (FSRS, oturum kuyruğu, merak ağırlıklı seçim), `src/lib/stats.ts`, `src/store/sync.ts` (önbellek + gönderim kuyruğu), `src/pages/Calisma.tsx` (çalışma akışı).
 
 ## Komutlar
 
@@ -19,13 +20,13 @@ Bilimsel bulgulara dayalı genel kültür uygulaması. Dayanak: “Genel Kültü
 npm run dev       # yerel geliştirme (veri/ klasörüyle)
 npm test          # birim testleri
 npm run build     # tip kontrolü + üretim derlemesi
-npm run kontrol   # veri/kartlar şema ve yineleme denetimi — kart yazdıktan sonra ŞART
+npm run kontrol   # veri/kartlar ve veri/rehber şema ve yineleme denetimi — kart ya da rehber yazdıktan sonra ŞART
 npm run ozet      # merak, alanlar, bekleyen okumalar, hatalı kartlar, sıradaki kimlikler
 npm run ozet -- --sorular <alan|hepsi>   # var olan sorular (yinelemeyi önlemek için)
 npm run olay -- '<json>'                 # olay günlüğüne kayıt (okuma, isaret-cozuldu…)
 ```
 
-Claude Code komutları (`.claude/skills/`): `/kart-ekle`, `/okuma`, `/hangisi`, `/oneri`, `/kart-duzelt`.
+Claude Code komutları (`.claude/skills/`): `/kart-ekle`, `/okuma`, `/hangisi`, `/oneri`, `/kart-duzelt`, `/rehber`.
 
 ## Kart şeması
 

@@ -116,7 +116,7 @@ function CardRow({ s, now, open, onToggle }: { s: CardState; now: Date; open: bo
         <div>
           <div className="item-title">{c.question}</div>
           <div className="item-meta">
-            <span className="chip">{DOMAIN_LABELS[c.domain]}</span>
+            <span className={`chip chip-domain d-${c.domain}`}>{DOMAIN_LABELS[c.domain]}</span>
             <span className={`chip${phase === 'olgun' ? ' chip-good' : phase === 'yeni' ? ' chip-accent' : ''}`}>
               {PHASE_LABELS[phase]}
             </span>

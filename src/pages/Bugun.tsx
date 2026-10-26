@@ -4,10 +4,13 @@ import { pct, num } from '../app/format';
 import { introducedToday } from '../lib/state';
 import { pendingReadings, readingsThisWeek, streak, trueRetention } from '../lib/stats';
 import { addDays, formatInterval } from '../lib/dates';
-import { IconBook, IconInfo, IconWarn } from '../components/Icons';
+import { IconBook, IconCompass, IconInfo, IconWarn } from '../components/Icons';
+import { suggestItem } from '../lib/guide';
+import { GUIDE_AREA_LABELS } from '../lib/schema';
+import { rememberArea } from './Rehber';
 
 export function Bugun() {
-  const { data, now, loading, problems } = useApp();
+  const { data, now, loading, problems, guides } = useApp();
   if (!data || loading) {
     return (
       <div className="page">
@@ -34,11 +37,13 @@ export function Bugun() {
   const pending = pendingReadings(data.readings);
   const flagged = data.states.filter((s) => s.flag);
   const learned = data.states.filter((s) => !s.isNew).length;
+  const suggestion = suggestItem(guides, data.readings, data.domainCuriosity);
 
   return (
     <div className="page">
-      <div className="panel stack" style={{ gap: 16 }}>
-        <div>
+      <div className="panel stack hero" style={{ gap: 18 }}>
+        <div className="stack" style={{ gap: 4 }}>
+          <span className="eyebrow">{now.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
           <h1>Bugün</h1>
           <p className="sub">
             {due + newAvailable > 0
@@ -49,12 +54,12 @@ export function Bugun() {
           </p>
         </div>
         <div className="grid-2">
-          <div className="tile">
+          <div className="tile tile-flat">
             <span className="label">Tekrar</span>
             <span className="value">{num(due)}</span>
             <span className="note">vadesi gelen kart</span>
           </div>
-          <div className="tile">
+          <div className="tile tile-flat">
             <span className="label">Yeni</span>
             <span className="value">{num(newAvailable)}</span>
             <span className="note">önce tahmin edeceğin kart</span>
@@ -123,6 +128,17 @@ export function Bugun() {
           <p className="muted small">
             Okuduğun bir makaleyi ya da kitabı ekle; Claude Code ondan kart çıkarsın.
           </p>
+        )}
+        {suggestion && (
+          <a className="suggest" href="#/rehber" onClick={() => rememberArea(suggestion.guide.area)}>
+            <IconCompass />
+            <span>
+              <span className="muted small">Ne okusam? Rehberden, {GUIDE_AREA_LABELS[suggestion.guide.area]}:</span>
+              <br />
+              <strong>{suggestion.item.title}</strong>
+              {suggestion.item.author && <span className="muted"> · {suggestion.item.author}</span>}
+            </span>
+          </a>
         )}
       </div>
 

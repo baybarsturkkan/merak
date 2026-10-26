@@ -167,9 +167,20 @@ export interface HBarRow {
 }
 
 /** Yatay çubuklar; isteğe bağlı hedef çizgisi (ör. %90) */
-export function HBars({ rows, target, emptyText = 'veri yok' }: { rows: HBarRow[]; target?: number; emptyText?: string }) {
+export function HBars({
+  rows,
+  target,
+  emptyText = 'veri yok',
+  tone,
+}: {
+  rows: HBarRow[];
+  target?: number;
+  emptyText?: string;
+  /** spark: merak verisi kehribar renkte */
+  tone?: 'spark';
+}) {
   return (
-    <div className="hbars">
+    <div className={`hbars${tone ? ` hbars-${tone}` : ''}`}>
       {rows.map((r) => (
         <div className="hbar" key={r.key} title={r.title}>
           <span>{r.label}</span>

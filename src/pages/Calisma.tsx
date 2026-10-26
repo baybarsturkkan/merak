@@ -275,9 +275,9 @@ function CardRunner({
   const levels = isNew ? CURIOSITY : CONFIDENCE;
 
   return (
-    <article className="study-card">
+    <article className={`study-card d-${card.domain}`}>
       <div className="row">
-        <span className="chip">{DOMAIN_LABELS[card.domain]}</span>
+        <span className={`chip chip-domain d-${card.domain}`}>{DOMAIN_LABELS[card.domain]}</span>
         {isNew && <span className="chip chip-accent">Yeni kart</span>}
         {isChoice && <span className="chip">Hangisi?</span>}
         {state.flag && <span className="chip chip-warn">Hatalı işaretli</span>}

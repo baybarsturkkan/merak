@@ -2,8 +2,10 @@ import {
   eventFilePath,
   parseDeck,
   parseEvents,
+  parseGuide,
   type AppEvent,
   type Card,
+  type Guide,
   type EventInput,
 } from '../lib/schema';
 import { newId } from '../lib/dates';
@@ -27,10 +29,11 @@ export interface SyncStatus {
 export interface Snapshot {
   cards: Card[];
   events: AppEvent[];
+  guides: Guide[];
   problems: string[];
 }
 
-type ParsedFile = { cards?: Card[]; events?: AppEvent[]; errors: string[] };
+type ParsedFile = { cards?: Card[]; events?: AppEvent[]; guide?: Guide; errors: string[] };
 
 /**
  * Önbellek + gönderim kuyruğu.
@@ -91,6 +94,7 @@ export class SyncEngine {
     if (this.snap) return this.snap;
     const cards: Card[] = [];
     const events: AppEvent[] = [];
+    const guides: Guide[] = [];
     const problems: string[] = [];
     for (const [path, file] of Object.entries(this.files).sort(([a], [b]) => a.localeCompare(b))) {
       const key = `${path}@${file.sha}`;
@@ -99,6 +103,8 @@ export class SyncEngine {
         if (path.startsWith('kartlar/')) {
           const r = parseDeck(file.content);
           p = { cards: r.cards, errors: r.errors };
+        } else if (path.startsWith('rehber/')) {
+          p = parseGuide(file.content);
         } else {
           const r = parseEvents(file.content);
           p = { events: r.events, errors: r.errors };
@@ -107,10 +113,11 @@ export class SyncEngine {
       }
       if (p.cards) cards.push(...p.cards);
       if (p.events) events.push(...p.events);
+      if (p.guide) guides.push(p.guide);
       for (const e of p.errors) problems.push(`${path}: ${e}`);
     }
     events.push(...this.outbox);
-    this.snap = { cards, events, problems };
+    this.snap = { cards, events, guides, problems };
     return this.snap;
   }
 

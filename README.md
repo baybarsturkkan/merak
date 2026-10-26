@@ -18,6 +18,7 @@ Bilimsel bulgulara dayalı, ücretsiz bir genel kültür uygulaması. Telefonda 
 | Aşırı düzeltme | Cevaptan önce güven puanı; emin olduğun hatalar vurgulanır ve erken tekrar edilir |
 | Merak hafızayı güçlendirir | Merak puanı veriyorsun; yeni kartlar merakına göre seçilir |
 | Okuma miktarı en güçlü öngörücü | Okuma günlüğü; her okumadan Claude Code 2–3 kart çıkarır |
+| Popüler yazarlara ve dergilere aşinalık genel bilgiyi öngörür | Rehber: alanlara göre doğrulanmış kitap, podcast, belgesel ve kurs önerileri, yol haritasıyla |
 | Karma çalışma benzer kategorilerde işe yarar | Alanlar karışık gelir; karıştırılanlar için “hangisi?” kartları |
 | “Biliyorum” hissi güvenilmez | İstatistikte gerçek hatırlama oranı ve güven–doğruluk grafiği |
 
@@ -25,7 +26,7 @@ Bilimsel bulgulara dayalı, ücretsiz bir genel kültür uygulaması. Telefonda 
 
 ```
 merak        (herkese açık depo)  uygulama kodu → GitHub Pages
-merak-veri   (özel depo)          kartlar/  ve  kayit/  (tekrar geçmişi, okumalar)
+merak-veri   (özel depo)          kartlar/, rehber/ ve kayit/ (tekrar geçmişi, okumalar)
 ```
 
 - Uygulama verilerini özel `merak-veri` deposundan GitHub API ile okur ve yazar. Başka sunucu yok, ücret yok.
@@ -53,6 +54,7 @@ Bu klasörde Claude Code’u aç:
 | `/hangisi [çift]` | Karıştırdığın kavramlar için seçenekli kartlar yazar. |
 | `/oneri` | Merakına göre 3 okuma ve kart konusu önerir. |
 | `/kart-duzelt` | Uygulamada “Hatalı mı?” ile işaretlediğin kartları düzeltir. |
+| `/rehber [alan]` | Rehber bölümü için kaynak araştırır, doğrular ve ekler; boş bırakırsan merakına göre genişletir. |
 
 ## Geliştirme
 

@@ -25,6 +25,13 @@ export const IconBook = (p: P) => (
   </svg>
 );
 
+export const IconCompass = (p: P) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m15.5 8.5-2 5-5 2 2-5z" />
+  </svg>
+);
+
 export const IconChart = (p: P) => (
   <svg {...base} {...p}>
     <path d="M4 20h16" />
@@ -81,7 +88,7 @@ export const IconSpark = (p: P) => (
 /** Uygulama logosu: soru işareti */
 export const Logo = (p: P) => (
   <svg viewBox="0 0 512 512" aria-hidden {...p}>
-    <rect width="512" height="512" rx="120" fill="var(--accent)" />
+    <rect width="512" height="512" rx="120" fill="#3550d4" />
     <path
       d="M188 204c0-40 32-70 70-70 39 0 68 28 68 64 0 32-21 47-41 61-17 12-29 24-29 48v14"
       fill="none"

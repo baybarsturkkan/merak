@@ -9,7 +9,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
-import type { EventInput } from '../lib/schema';
+import type { EventInput, Guide } from '../lib/schema';
 import { derive, type Derived } from '../lib/state';
 import {
   browserKV,
@@ -32,6 +32,8 @@ interface AppState {
   status: SyncStatus;
   data: Derived | null;
   problems: string[];
+  /** rehber/*.json: alanlara göre kaynak rehberleri */
+  guides: Guide[];
   record: (e: EventInput) => void;
   sync: () => Promise<void>;
   now: Date;
@@ -39,7 +41,7 @@ interface AppState {
 
 const Ctx = createContext<AppState | null>(null);
 
-const EMPTY: Snapshot = { cards: [], events: [], problems: [] };
+const EMPTY: Snapshot = { cards: [], events: [], guides: [], problems: [] };
 const IDLE: SyncStatus = { state: 'hazir', pending: 0 };
 const noSubscribe = () => () => {};
 const PUSH_DELAY_MS = 15_000;
@@ -136,6 +138,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     status,
     data,
     problems: snapshot.problems,
+    guides: snapshot.guides,
     record,
     sync: () => engine?.sync() ?? Promise.resolve(),
     now,
