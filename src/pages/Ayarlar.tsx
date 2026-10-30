@@ -5,6 +5,7 @@ import { pct } from '../app/format';
 import { SETTING_LIMITS, type Settings } from '../lib/schema';
 import { DEFAULT_REPO, guessDeviceName, type Connection } from '../store/config';
 import { GithubStore } from '../store/github';
+import type { SyncState } from '../store/sync';
 import { IconCheck, IconInfo, IconWarn } from '../components/Icons';
 
 export function Ayarlar({ welcome = false }: { welcome?: boolean }) {
@@ -169,11 +170,18 @@ function StudySettings() {
   const { data, record } = useApp();
   if (!data) return null;
   const s = data.settings;
-  const change = (key: keyof Settings, value: number) => {
+  /** Geçerli değeri kaydeder ve kutuda gösterilmesi gereken değeri döner. */
+  const change = (key: keyof Settings, value: number): number => {
     const [lo, hi] = SETTING_LIMITS[key];
-    if (Number.isNaN(value)) return;
+    if (!Number.isFinite(value)) return s[key];
     const v = Math.min(hi, Math.max(lo, value));
     if (v !== s[key]) record({ type: 'ayar', key, value: v });
+    return v;
+  };
+  // Boş kutu 0 sayılmasın: Number('') === 0. Boş ya da sayı değilse eski değere dön.
+  const changeInt = (key: 'newPerDay' | 'weeklyReadingGoal', input: HTMLInputElement) => {
+    const raw = input.value.trim();
+    input.value = String(change(key, raw === '' ? NaN : Math.round(Number(raw))));
   };
   return (
     <section className="panel stack">
@@ -200,8 +208,9 @@ function StudySettings() {
             type="number"
             min={0}
             max={50}
+            key={s.newPerDay}
             defaultValue={s.newPerDay}
-            onBlur={(e) => change('newPerDay', Math.round(Number(e.target.value)))}
+            onBlur={(e) => changeInt('newPerDay', e.currentTarget)}
           />
         </label>
         <label className="field">
@@ -210,8 +219,9 @@ function StudySettings() {
             type="number"
             min={0}
             max={30}
+            key={s.weeklyReadingGoal}
             defaultValue={s.weeklyReadingGoal}
-            onBlur={(e) => change('weeklyReadingGoal', Math.round(Number(e.target.value)))}
+            onBlur={(e) => changeInt('weeklyReadingGoal', e.currentTarget)}
           />
         </label>
       </div>
@@ -219,6 +229,13 @@ function StudySettings() {
     </section>
   );
 }
+
+const STATE_LABEL: Record<SyncState, string> = {
+  hazir: 'Hazır',
+  senkron: 'Senkronize ediliyor…',
+  cevrimdisi: 'Çevrimdışı',
+  hata: 'Hata',
+};
 
 function SyncPanel() {
   const { status, engine, sync, conn } = useApp();
@@ -234,7 +251,7 @@ function SyncPanel() {
           <code>{engine.device}</code>
         </dd>
         <dt>Durum</dt>
-        <dd>{status.message ?? status.state}</dd>
+        <dd>{status.message ?? STATE_LABEL[status.state]}</dd>
         <dt>Bekleyen</dt>
         <dd>{status.pending} olay</dd>
         <dt>Son senkron</dt>
