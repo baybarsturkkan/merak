@@ -88,6 +88,11 @@ export function Calisma() {
     preloadImages(queue.flatMap((it) => data.byId.get(it.cardId)?.card.image?.src ?? []));
   }, [queue, data]);
 
+  // Her yeni kart sayfanın başından açılsın (önceki kartın kaydırması kalmasın)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [index]);
+
   const done = !!queue && queue.length > 0 && index >= queue.length;
   useEffect(() => {
     if (done) void engine?.push();
@@ -406,7 +411,7 @@ function CardRunner({
             <p>{card.why}</p>
           </details>
 
-          <div className="stack" style={{ gap: 8 }}>
+          <div className="stack grade-bar" style={{ gap: 8 }}>
             <span className="prompt-label">
               {isChoice ? (match === 'tam' ? 'Doğru! Ne kadar kolaydı?' : 'Yanlış seçenek.') : 'Ne kadar hatırladın?'}
               <span className="muted"> Altındaki süre, kartın yeniden sorulacağı zaman.</span>

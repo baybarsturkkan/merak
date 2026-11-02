@@ -64,6 +64,37 @@ function variants(answer: string): string[] {
 
 export type MatchResult = 'tam' | 'yakin' | 'farkli' | 'bos';
 
+const ROMAN = /^(?=[ivxlcdm])m{0,3}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$/;
+const ORDINALS = new Set([
+  'birinci', 'ikinci', 'ucuncu', 'dorduncu', 'besinci', 'altinci', 'yedinci', 'sekizinci', 'dokuzuncu', 'onuncu',
+]);
+
+/**
+ * Harf hatası payı tanınmayan kelimeler: sayılar (1453, 44), Roma rakamları (II. Mehmed)
+ * ve sıra sözcükleri (İkinci Dünya Savaşı). "1435" ≈ "1453" ya da "I" ≈ "II" yakın sayılmamalı.
+ */
+function keyTokens(normalized: string): string[] {
+  return normalized.split(' ').filter((w) => /\d/.test(w) || ROMAN.test(w) || ORDINALS.has(w));
+}
+
+function sameKeys(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const x = [...a].sort();
+  const y = [...b].sort();
+  return x.every((w, i) => w === y[i]);
+}
+
+/** a'daki her anahtar kelime b'de de var mı */
+function keysCovered(a: string[], b: string[]): boolean {
+  const rest = [...b];
+  for (const w of a) {
+    const i = rest.indexOf(w);
+    if (i < 0) return false;
+    rest.splice(i, 1);
+  }
+  return true;
+}
+
 export function matchAnswer(typed: string, answer: string, accept: string[] = []): MatchResult {
   const t = normalize(typed);
   if (!t) return 'bos';
@@ -71,9 +102,10 @@ export function matchAnswer(typed: string, answer: string, accept: string[] = []
 
   for (const c of candidates) if (c === t) return 'tam';
 
+  const tKeys = keyTokens(t);
   for (const c of candidates) {
     const tolerance = c.length <= 4 ? 0 : c.length <= 8 ? 1 : Math.floor(c.length * 0.2);
-    if (tolerance > 0 && levenshtein(t, c) <= tolerance) return 'yakin';
+    if (tolerance > 0 && sameKeys(tKeys, keyTokens(c)) && levenshtein(t, c) <= tolerance) return 'yakin';
   }
 
   // Cevap, yazılanın içinde tam kelimeler olarak geçiyorsa ("sanırım 1453 yılında" ⊃ "1453")
@@ -83,7 +115,9 @@ export function matchAnswer(typed: string, answer: string, accept: string[] = []
   }
   // Yazılan, uzun cevabın önemli bir kısmını kapsıyorsa
   for (const c of candidates) {
-    if (t.length >= 4 && ` ${c} `.includes(` ${t} `) && t.length / c.length >= 0.5) return 'yakin';
+    // ama eksik kalan kısım bir sayı ya da sıra sözcüğüyse değil ("Dünya Savaşı" ⊄ "İkinci Dünya Savaşı")
+    if (t.length >= 4 && ` ${c} `.includes(` ${t} `) && t.length / c.length >= 0.5 && keysCovered(keyTokens(c), tKeys))
+      return 'yakin';
   }
   return 'farkli';
 }

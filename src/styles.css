@@ -11,7 +11,8 @@
   --border-strong: rgba(64, 48, 24, 0.22);
   --text: #1d1a16;
   --text-2: #57514a;
-  --muted: #8a8277;
+  /* #8a8277 açık zeminlerde 3,4–3,7:1 kalıyordu; bu ton tüm açık zeminlerde ≥4,9:1 (WCAG AA) */
+  --muted: #6b645a;
   --accent: #3550d4;
   --accent-hover: #2b43b9;
   --accent-ink: #ffffff;
@@ -749,6 +750,8 @@ kbd {
 .study-card {
   position: relative;
   overflow: hidden;
+  /* clip: köşeler yine kırpılır ama kaydırma kabı oluşmaz, alttaki not çubuğu yapışabilir */
+  overflow: clip;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 22px;
@@ -881,6 +884,11 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* Mavi zemin üstünde soluk renk koyu temada yetersiz kalıyordu (4,4:1) */
+.answer-box .muted {
+  color: var(--text-2);
 }
 
 .answer-box .answer {
@@ -1126,6 +1134,31 @@ details.why p {
   .choice .key,
   .grade .key {
     display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  /* Telefonda not düğmeleri ekranın altına yapışır: uzun cevapta aşağı kaydırmak gerekmesin */
+  .grade-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    /* kartın yan boşluğu kadar taşar: çubuk kart genişliğinde görünür */
+    margin: 0 -24px;
+    padding: 10px 24px calc(10px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 16px -12px rgba(0, 0, 0, 0.25);
+  }
+  .grade-bar .prompt-label .muted {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .grade-bar {
+    margin: 0 -18px;
+    padding-inline: 18px;
   }
 }
 

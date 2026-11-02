@@ -15,6 +15,20 @@ import { OfflineError, type FileContent, type Store } from './types';
 export interface KV {
   get<T>(key: string): Promise<T | undefined>;
   set(key: string, value: unknown): Promise<void>;
+  /** Oku–değiştir–yaz tek işlemde: aynı anda açık sekmeler birbirinin yazdığını ezmesin */
+  update<T>(key: string, fn: (old: T | undefined) => T): Promise<void>;
+}
+
+/** Kimliğe göre birleşim; sıra korunur, ilk gelen kalır */
+function unionById(a: AppEvent[], b: AppEvent[]): AppEvent[] {
+  const seen = new Set<string>();
+  const out: AppEvent[] = [];
+  for (const e of [...a, ...b]) {
+    if (seen.has(e.id)) continue;
+    seen.add(e.id);
+    out.push(e);
+  }
+  return out;
 }
 
 export type SyncState = 'hazir' | 'senkron' | 'cevrimdisi' | 'hata';
@@ -48,6 +62,9 @@ export class SyncEngine {
   private listeners = new Set<() => void>();
   private running: Promise<void> | null = null;
   private snap: Snapshot | null = null;
+  /** Bu sekmenin gönderdiği olaylar: depodaki kuyruğa geri girmesinler */
+  private sent = new Set<string>();
+  private outboxWrites: Promise<void> = Promise.resolve();
   status: SyncStatus = { state: 'hazir', pending: 0 };
 
   constructor(
@@ -68,6 +85,31 @@ export class SyncEngine {
     this.outbox = (await this.kv.get<AppEvent[]>(this.keyOutbox)) ?? [];
     this.status = { ...this.status, pending: this.outbox.length };
     this.emit();
+  }
+
+  /**
+   * Kuyruğu depoya yazar. Her sekmenin kendi bellekteki kuyruğu var; düz `set` başka bir
+   * sekmenin henüz göndermediği olayları silerdi. Bu yüzden depodaki kuyrukla birleştirilir,
+   * yalnızca gönderilmiş olaylar çıkarılır.
+   */
+  private persistOutbox(): Promise<void> {
+    const job = this.outboxWrites.then(() =>
+      this.kv.update<AppEvent[]>(this.keyOutbox, (stored) =>
+        unionById(stored ?? [], this.outbox).filter((e) => !this.sent.has(e.id)),
+      ),
+    );
+    this.outboxWrites = job.catch(() => {});
+    return job;
+  }
+
+  /** Başka sekmelerin bırakıp gönderemediği olayları da kuyruğa al */
+  private async adoptStoredOutbox(): Promise<void> {
+    const stored = ((await this.kv.get<AppEvent[]>(this.keyOutbox)) ?? []).filter((e) => !this.sent.has(e.id));
+    const merged = unionById(this.outbox, stored);
+    if (merged.length !== this.outbox.length) {
+      this.outbox = merged;
+      this.emit();
+    }
   }
 
   subscribe(fn: () => void): () => void {
@@ -125,7 +167,7 @@ export class SyncEngine {
   record(input: EventInput): AppEvent {
     const event = { ...input, id: newId(), ts: new Date().toISOString(), device: this.device } as AppEvent;
     this.outbox.push(event);
-    void this.kv.set(this.keyOutbox, this.outbox);
+    void this.persistOutbox();
     this.status = { ...this.status, pending: this.outbox.length };
     this.emit();
     return event;
@@ -163,6 +205,8 @@ export class SyncEngine {
   }
 
   private async doPush(): Promise<void> {
+    await this.outboxWrites;
+    await this.adoptStoredOutbox();
     if (!this.outbox.length) return;
     const groups = new Map<string, AppEvent[]>();
     for (const e of this.outbox) {
@@ -174,10 +218,10 @@ export class SyncEngine {
     for (const [path, events] of groups) {
       const result = await this.store.append(path, events, this.files[path]);
       this.files[path] = result;
-      const sent = new Set(events.map((e) => e.id));
-      this.outbox = this.outbox.filter((e) => !sent.has(e.id));
+      for (const e of events) this.sent.add(e.id);
+      this.outbox = this.outbox.filter((e) => !this.sent.has(e.id));
       await this.kv.set(this.keyFiles, this.files);
-      await this.kv.set(this.keyOutbox, this.outbox);
+      await this.persistOutbox();
       this.emit();
     }
   }
@@ -223,6 +267,9 @@ export function memoryKV(): KV & { data: Map<string, unknown> } {
     },
     async set(key: string, value: unknown) {
       data.set(key, structuredClone(value));
+    },
+    async update<T>(key: string, fn: (old: T | undefined) => T) {
+      data.set(key, structuredClone(fn(structuredClone(data.get(key)) as T | undefined)));
     },
   };
 }

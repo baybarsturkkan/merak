@@ -1,4 +1,4 @@
-import { createStore, get, set } from 'idb-keyval';
+import { createStore, get, set, update } from 'idb-keyval';
 import { slugDevice } from '../lib/schema';
 import { GithubStore } from './github';
 import { LocalStore } from './local';
@@ -80,4 +80,5 @@ const idb = createStore('merak', 'onbellek');
 export const browserKV: KV = {
   get: <T,>(key: string) => get<T>(key, idb),
   set: (key: string, value: unknown) => set(key, value, idb),
+  update: <T,>(key: string, fn: (old: T | undefined) => T) => update<T>(key, fn, idb),
 };

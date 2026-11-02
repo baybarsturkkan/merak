@@ -61,6 +61,18 @@ describe('mergeJsonl', () => {
     expect(mergeJsonl(once, [a, b])).toBe(once);
   });
 
+  it('okuma olayını iç içe reading.id yüzünden yeniden eklemez', () => {
+    const e = {
+      type: 'okuma',
+      reading: { id: 'okuma-abc', title: 'Kozmos', kind: 'kitap', date: '2026-10-30' },
+      id: 'olay-1',
+      ts: '2026-10-30T09:00:00Z',
+      device: 'telefon',
+    };
+    const once = mergeJsonl('', [e]);
+    expect(mergeJsonl(once, [e])).toBe(once);
+  });
+
   it('Türkçe karakterleri base64 üzerinden bozmadan taşır', () => {
     const s = 'Çağdaş şiir — ığüşöç İĞÜŞÖÇ';
     expect(b64decode(b64encode(s))).toBe(s);
@@ -159,6 +171,48 @@ describe('GitHub senkronu', () => {
     expect(back.status.pending).toBe(1);
     await back.sync();
     expect(back.status.pending).toBe(0);
+  });
+
+  it('aynı anda açık iki sekme birbirinin bekleyen olaylarını silmez', async () => {
+    const kv = memoryKV(); // iki sekme aynı IndexedDB'yi paylaşır
+    const tabA = new SyncEngine(store, 'telefon', kv);
+    const tabB = new SyncEngine(store, 'telefon', kv);
+    await tabA.init();
+    await tabB.init();
+    tabA.record({ type: 'tekrar', cardId: 'tarih-0001', rating: 3, phase: 'ontest' });
+    tabB.record({ type: 'tekrar', cardId: 'tarih-0002', rating: 3, phase: 'ontest' });
+    await tabB.push(); // B gönderir; A'nın olayını da devralır
+
+    // A gönderemeden kapandı; uygulama yeniden açıldı
+    const reopened = new SyncEngine(store, 'telefon', kv);
+    await reopened.init();
+    await reopened.sync();
+    const ids = reopened
+      .snapshot()
+      .events.map((e) => (e.type === 'tekrar' ? e.cardId : ''))
+      .sort();
+    expect(ids).toEqual(['tarih-0001', 'tarih-0002']);
+    expect(reopened.status.pending).toBe(0);
+  });
+
+  it('bir sekmenin gönderimi diğerinin henüz gönderilmemiş olayını kuyruktan silmez', async () => {
+    const kv = memoryKV();
+    const tabA = new SyncEngine(store, 'telefon', kv);
+    const tabB = new SyncEngine(store, 'telefon', kv);
+    await tabA.init();
+    await tabB.init();
+    tabA.record({ type: 'tekrar', cardId: 'tarih-0001', rating: 3, phase: 'ontest' });
+    tabB.record({ type: 'tekrar', cardId: 'tarih-0002', rating: 3, phase: 'ontest' });
+    await tabA.push(); // A gönderdi; B gönderemeden kapandı
+
+    const reopened = new SyncEngine(store, 'telefon', kv);
+    await reopened.init();
+    await reopened.sync();
+    const ids = reopened
+      .snapshot()
+      .events.map((e) => (e.type === 'tekrar' ? e.cardId : ''))
+      .sort();
+    expect(ids).toEqual(['tarih-0001', 'tarih-0002']);
   });
 
   it('yanlış token anlaşılır bir hata verir', async () => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../app/context';
 import { localDateKey, monthLabel } from '../lib/dates';
 import { newId } from '../lib/dates';
@@ -82,7 +82,10 @@ export function Okuma() {
         </div>
       </div>
 
-      {draft && <ReadingForm draft={draft} onCancel={() => setDraft(null)} onSave={save} />}
+      {draft && (
+        // key: başka bir okumanın "Düzenle"sine basılınca form o okumayla yeniden kurulsun
+        <ReadingForm key={draft.id || 'yeni'} draft={draft} onCancel={() => setDraft(null)} onSave={save} />
+      )}
 
       <div className="callout">
         <IconInfo />
@@ -196,8 +199,14 @@ export function ReadingForm({
 }) {
   const [r, setR] = useState<Reading>(draft);
   const set = (patch: Partial<Reading>) => setR((x) => ({ ...x, ...patch }));
+  const formRef = useRef<HTMLFormElement>(null);
+  // Listenin aşağısında "Düzenle"ye basılınca form sayfanın üstünde açılır; görünür olsun
+  useEffect(() => {
+    formRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, []);
   return (
     <form
+      ref={formRef}
       className="panel stack"
       onSubmit={(e) => {
         e.preventDefault();

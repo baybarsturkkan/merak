@@ -192,6 +192,22 @@ describe('cevap eşleştirme', () => {
   it('kısa cevaplarda yazım hatasını kabul etmez', () => {
     expect(matchAnswer('1454', '1453')).toBe('farkli');
   });
+
+  it('sayı, Roma rakamı ve sıra sözcüğündeki farkı yakın saymaz', () => {
+    expect(matchAnswer('29 Mayıs 1435', '29 Mayıs 1453')).toBe('farkli');
+    expect(matchAnswer('MÖ 45', 'MÖ 44')).toBe('farkli');
+    expect(matchAnswer('1914–1919', '1914–1918')).toBe('farkli');
+    expect(matchAnswer('III. Mehmed', 'II. Mehmed')).toBe('farkli');
+    expect(matchAnswer('II. Dünya Savaşı', 'I. Dünya Savaşı')).toBe('farkli');
+    expect(matchAnswer('Birinci Dünya Savaşı', 'İkinci Dünya Savaşı')).toBe('farkli');
+    expect(matchAnswer('Dünya Savaşı', 'İkinci Dünya Savaşı')).toBe('farkli');
+    // Sayı doğruysa harf hatası yine kabul edilir
+    expect(matchAnswer('29 Mayis 1453', '29 Mayıs 1453')).toBe('tam');
+    expect(matchAnswer('29 Mayss 1453', '29 Mayıs 1453')).toBe('yakin');
+    expect(matchAnswer('II. Mehmet', 'II. Mehmed')).toBe('yakin');
+    expect(matchAnswer('İkinci Dünya Savasi', 'İkinci Dünya Savaşı')).toBe('tam');
+    expect(matchAnswer('Ikinci Dunya Savsi', 'İkinci Dünya Savaşı')).toBe('yakin');
+  });
 });
 
 describe('istatistik', () => {
